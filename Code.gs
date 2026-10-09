@@ -1,6 +1,6 @@
 /** Schedule Personil + Cover Shift — Google Apps Script backend.
  * Bind this script to the target spreadsheet or set SPREADSHEET_ID in Script Properties.
- * Run setupApp() once, then setAdminPinFromEditor() from the Apps Script editor.
+ * Run setupApp() once. To set the initial admin PIN, add Script Property ADMIN_PIN_SETUP, then run setAdminPinFromEditor().
  */
 const APP = {
   spreadsheetId: '1D9VyUWlNaQC0ktI74ebL7lUFjdIjX36r20nbf395HW0',
@@ -16,7 +16,7 @@ const APP = {
 };
 
 function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
+  return HtmlService.createHtmlOutputFromFile('index')
     .setTitle('Schedule Personil + Cover Shift')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
@@ -54,11 +54,13 @@ function setupApp() {
   return {ok:true,message:'Sheet database siap. Jalankan setAdminPinFromEditor() untuk membuat PIN admin.'};
 }
 function setAdminPinFromEditor() {
-  const ui = SpreadsheetApp.getUi();
-  const result = ui.prompt('Atur PIN Admin', 'Masukkan PIN admin baru (minimal 8 karakter). Simpan baik-baik.', ui.ButtonSet.OK_CANCEL);
-  if (result.getSelectedButton() !== ui.Button.OK) return;
-  const pin = String(result.getResponseText() || '');
-  if (pin.length < 8) throw new Error('PIN minimal 8 karakter.');
+  // Apps Script editor execution has no Spreadsheet UI. Set ADMIN_PIN_SETUP
+  // in Project Settings > Script properties, then run this function.
+  const props = PropertiesService.getScriptProperties();
+  const pin = String(props.getProperty('ADMIN_PIN_SETUP') || '');
+  if (pin.length < 8) {
+    throw new Error('Atur Script Property ADMIN_PIN_SETUP dengan PIN minimal 8 karakter, lalu jalankan fungsi ini lagi.');
+  }
   setupApp();
   const sh = db_().getSheetByName(APP.sheets.users);
   const values = sh.getDataRange().getValues();
@@ -69,8 +71,9 @@ function setAdminPinFromEditor() {
   const record = ['USR-ADMIN','', 'ADMIN', 'Administrator', 'ADMIN', salt, hash, 'ACTIVE', now, ''];
   if (row < 2) row = sh.getLastRow()+1;
   sh.getRange(row,1,1,record.length).setValues([record]);
+  props.deleteProperty('ADMIN_PIN_SETUP');
   audit_('SYSTEM','SET_ADMIN_PIN','USERS','USR-ADMIN','PIN admin dibuat/diubah');
-  return 'PIN admin berhasil disimpan. Jangan bagikan PIN ini.';
+  return 'PIN admin berhasil disimpan. Login dengan username ADMIN dan PIN yang tadi diatur.';
 }
 function pinHash_(salt,pin) {
   const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(salt)+'|'+String(pin), Utilities.Charset.UTF_8);
@@ -121,7 +124,7 @@ function apiGetDashboard(token, monthText) {
   const sched = rows_(APP.sheets.schedule).map(x=>({id:String(x.r[0]),personnelId:String(x.r[1]),name:String(x.r[2]),date:dateIso_(x.r[3]),shift:String(x.r[4]),source:String(x.r[5]||'')})).filter(s=>s.date);
   const covers = rows_(APP.sheets.covers).map(x=>({id:String(x.r[0]),date:dateIso_(x.r[1]),ownerId:String(x.r[2]),ownerName:String(x.r[3]),covererId:String(x.r[4]),covererName:String(x.r[5]),shift:String(x.r[6]),reason:String(x.r[7]),status:String(x.r[8]),requestedBy:String(x.r[9]),requestedAt:dateIso_(x.r[10]),reviewedBy:String(x.r[11]),reviewedAt:dateIso_(x.r[12]),adminNote:String(x.r[13]||'')}));
   const ym = /^\d{4}-\d{2}$/.test(String(monthText||'')) ? String(monthText) : Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM');
-  return {user:user,month:ym,people:people,schedule:sched.filter(s=>s.date.slice(0,7)===ym),allSchedule:sched,covers:covers.filter(c=>c.date.slice(0,7)===ym),pendingCount:covers.filter(c=>c.status==='PENDING').length,shifts:APP.shifts};
+  return {user:user,month:ym,people:people,schedule:sched.filter(s=>s.date.slice(0,7)===ym),allSchedule:sched,covers:covers.filter(c=>c.date.slice(0,7)===ym),allCovers:covers,pendingCount:covers.filter(c=>c.status==='PENDING').length,shifts:APP.shifts};
 }
 function apiSavePersonnel(token, data) {
   const user = auth_(token); requireAdmin_(user);
@@ -209,8 +212,7 @@ function apiRequestCover(token,data) {
   const owner=people.find(x=>String(x.r[0])===ownerId), coverer=people.find(x=>String(x.r[0])===covererId);
   if(!owner||!coverer) throw new Error('Personel tidak ditemukan.');
   if(user.role!=='ADMIN' && user.personnelId!==ownerId && user.personnelId!==covererId) throw new Error('Akun hanya boleh mengajukan cover yang melibatkan dirinya.');
-  const duplicate=rows_(APP.sheets.covers).some(x=>dateIso_(x.r[1])===date && String(x.r[2])===ownerId && ['PENDING','APPROVED'].includes(String(x.r[8])));
-  if(duplicate) throw new Error('Sudah ada permintaan pending/disetujui untuk shift personel tersebut pada tanggal ini.');
+  // Pengajuan berulang diperbolehkan; setiap pengajuan dicatat sebagai baris tersendiri.
   const id=id_('COV');
   db_().getSheetByName(APP.sheets.covers).appendRow([id,new Date(date+'T00:00:00'),ownerId,String(owner.r[1]),covererId,String(coverer.r[1]),shift,reason,'PENDING',user.username,new Date(),'','','']);
   audit_(user.username,'REQUEST_COVER','COVER_REQUESTS',id,{date:date,owner:owner.r[1],coverer:coverer.r[1],shift:shift});
@@ -224,11 +226,7 @@ function apiReviewCover(token,data) {
   const row=rows_(APP.sheets.covers).find(x=>String(x.r[0])===id);
   if(!row) throw new Error('Permintaan cover tidak ditemukan.');
   if(String(row.r[8])!=='PENDING') throw new Error('Permintaan ini sudah diproses.');
-  if(status==='APPROVED') {
-    const date=dateIso_(row.r[1]), coverer=String(row.r[4]), owner=String(row.r[2]);
-    const clash=rows_(APP.sheets.covers).some(x=>String(x.r[0])!==id && dateIso_(x.r[1])===date && String(x.r[8])==='APPROVED' && (String(x.r[4])===coverer || String(x.r[2])===owner));
-    if(clash) throw new Error('Konflik: pengganti sudah mendapat cover lain atau shift ini sudah ditutup cover.');
-  }
+  // Tidak memblokir persetujuan karena frekuensi cover; admin tetap menentukan status.
   sh.getRange(row.row,9).setValue(status);
   sh.getRange(row.row,12,1,3).setValues([[user.username,new Date(),String(data.note||'')]]);
   audit_(user.username,status==='APPROVED'?'APPROVE_COVER':'REJECT_COVER','COVER_REQUESTS',id,{note:String(data.note||'')});
