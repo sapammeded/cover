@@ -52,11 +52,12 @@
   </main>
 </div>
 <script>
+const APP_WEB_APP_URL='https://script.google.com/macros/s/AKfycbwtK7ShpZ263zVkkA-Sc_sLdJTf5dnswMGT9hNkSp_X12UYDgR3fkux-eCbyMj_yaBJ/exec';
 let TOKEN='', USER=null, DATA=null, IMPORT_ROWS=null, ACTIVE_TAB='schedule';
 const $=id=>document.getElementById(id);
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function msg(id,text,ok=false){$(id).innerHTML=text?'<div class="msg '+(ok?'ok':'err')+'">'+esc(text)+'</div>':'';}
-function call(name,...args){return new Promise((resolve,reject)=>{const runner=google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e&&e.message||e)));runner[name](...args);});}
+function call(name,...args){return new Promise((resolve,reject)=>{if(!(window.google&&google.script&&google.script.run)){reject(new Error('Aplikasi belum dibuka dari Web App Apps Script. Buka URL aplikasi resmi: '+APP_WEB_APP_URL));return;}const runner=google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e&&e.message||e)));runner[name](...args);});}
 $('loginform').addEventListener('submit',async e=>{e.preventDefault();$('loginbtn').disabled=true;msg('loginmsg','');try{const r=await call('apiLogin',$('identifier').value,$('pin').value);TOKEN=r.token;USER=r.user;$('loginbox').classList.add('hidden');$('app').classList.remove('hidden');$('userbar').classList.remove('hidden');$('who').textContent=USER.name+' · '+USER.role;if(USER.role==='ADMIN')$('admintab').classList.remove('hidden');const d=new Date();$('month').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');await refresh();}catch(err){msg('loginmsg',err.message);}finally{$('loginbtn').disabled=false;}});
 async function logout(){try{await call('apiLogout',TOKEN);}catch(e){}TOKEN='';USER=null;DATA=null;$('app').classList.add('hidden');$('userbar').classList.add('hidden');$('loginbox').classList.remove('hidden');$('pin').value='';}
 async function refresh(){if(!TOKEN)return;try{DATA=await call('apiGetDashboard',TOKEN,$('month').value);render();msg('globalmsg','');}catch(e){msg('globalmsg',e.message);}}
