@@ -121,7 +121,7 @@ function apiLogout(token) {
 function apiGetDashboard(token, monthText) {
   const user = auth_(token);
   const people = rows_(APP.sheets.personnel).map(x => ({id:String(x.r[0]),name:String(x.r[1]),role:String(x.r[2]||''),status:String(x.r[3]||'ACTIVE')})).filter(p=>p.status.toUpperCase()==='ACTIVE');
-  const sched = rows_(APP.sheets.schedule).map(x=>({id:String(x.r[0]),personnelId:String(x.r[1]),name:String(x.r[2]),date:dateIso_(x.r[3]),shift:String(x.r[4]),source:String(x.r[5]||'')})).filter(s=>s.date);
+  const sched = rows_(APP.sheets.schedule).map(x=>({id:String(x.r[0]),personnelId:String(x.r[1]),name:String(x.r[2]),date:dateIso_(x.r[3]),shift:String(x.r[4]),source:String(x.r[5]||'')})).filter(s=>s.date && !/^keterangan:?$/i.test(String(s.name||'').trim()));
   const covers = rows_(APP.sheets.covers).map(x=>({id:String(x.r[0]),date:dateIso_(x.r[1]),ownerId:String(x.r[2]),ownerName:String(x.r[3]),covererId:String(x.r[4]),covererName:String(x.r[5]),shift:String(x.r[6]),reason:String(x.r[7]),status:String(x.r[8]),requestedBy:String(x.r[9]),requestedAt:dateIso_(x.r[10]),reviewedBy:String(x.r[11]),reviewedAt:dateIso_(x.r[12]),adminNote:String(x.r[13]||'')}));
   const ym = /^\d{4}-\d{2}$/.test(String(monthText||'')) ? String(monthText) : Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM');
   return {user:user,month:ym,people:people,schedule:sched.filter(s=>s.date.slice(0,7)===ym),allSchedule:sched,covers:covers.filter(c=>c.date.slice(0,7)===ym),allCovers:covers,pendingCount:covers.filter(c=>c.status==='PENDING').length,shifts:APP.shifts};
