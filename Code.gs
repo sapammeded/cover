@@ -229,7 +229,8 @@ function apiReviewCover(token,data) {
     const clash=rows_(APP.sheets.covers).some(x=>String(x.r[0])!==id && dateIso_(x.r[1])===date && String(x.r[8])==='APPROVED' && (String(x.r[4])===coverer || String(x.r[2])===owner));
     if(clash) throw new Error('Konflik: pengganti sudah mendapat cover lain atau shift ini sudah ditutup cover.');
   }
-  sh.getRange(row.row,9,1,6).setValues([[status,user.username,new Date(),String(data.note||''),'','']]);
+  sh.getRange(row.row,9).setValue(status);
+  sh.getRange(row.row,12,1,3).setValues([[user.username,new Date(),String(data.note||'')]]);
   audit_(user.username,status==='APPROVED'?'APPROVE_COVER':'REJECT_COVER','COVER_REQUESTS',id,{note:String(data.note||'')});
   return {ok:true,status:status};
 }
