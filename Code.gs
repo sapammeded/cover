@@ -16,9 +16,7 @@ const APP = {
 };
 
 function doGet() {
-  return HtmlService.createHtmlOutputFromFile('index')
-    .setTitle('Schedule Personil + Cover Shift')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+  return ContentService.createTextOutput(JSON.stringify({ok:true,app:'Schedule Personil + Cover Shift API',message:'Backend aktif. Frontend tersedia di GitHub Pages.'})).setMimeType(ContentService.MimeType.JSON);
 }
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Schedule Personil')
