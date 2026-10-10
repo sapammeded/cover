@@ -6,6 +6,29 @@
 <style>
 :root{--bg:#f4f6fb;--card:#fff;--ink:#182238;--muted:#68758b;--line:#e3e8f1;--blue:#3457d5;--red:#b72f45}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,Arial,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:11px 14px;background:var(--blue);color:white;font-weight:700}button:disabled{opacity:.5}.secondary{background:#edf1fb;color:#26385f}.danger{background:var(--red)}.wrap{max-width:1150px;margin:auto;padding:14px}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}.brand{font-size:20px;font-weight:850}.brand small{display:block;color:var(--muted);font-size:12px;font-weight:500}.panel,.stat{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:15px;box-shadow:0 5px 18px #1c31500a}.login{max-width:420px;margin:7vh auto}.hidden{display:none!important}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.stats{margin:12px 0 16px}.stat span{color:var(--muted);font-size:12px}.stat b{display:block;font-size:24px}.row{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin:12px 0}.field{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}.field label{font-size:12px;color:var(--muted);font-weight:750}.field input,.field select,.field textarea{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;padding:11px;background:white;color:var(--ink)}.field textarea{min-height:75px}.tabs{display:flex;gap:7px;overflow:auto;margin:12px 0}.tabs button{white-space:nowrap}.tabs button.active{background:#182238}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:12px}table{width:100%;border-collapse:collapse;min-width:650px;background:white}th,td{text-align:left;vertical-align:top;padding:10px;border-bottom:1px solid var(--line);font-size:12px}th{background:#f7f9fd;color:#53617a}tr:last-child td{border-bottom:0}.pill{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800;background:#eef1f8}.PENDING{background:#fff2cf;color:#805500}.APPROVED{background:#dff6eb;color:#08724f}.REJECTED{background:#ffe3e7;color:#9e2334}.msg{padding:11px;border-radius:9px;margin:10px 0;white-space:pre-wrap;overflow-wrap:anywhere}.ok{background:#ddf7e9;color:#126b49}.err{background:#ffe5e8;color:#a12335}.muted{color:var(--muted)}.small{font-size:12px}.note{background:#eef3ff;color:#32466f;padding:10px;border-radius:9px;font-size:12px}.actions{display:flex;gap:5px;flex-wrap:wrap}.empty{text-align:center;padding:22px;color:var(--muted)}.filelabel{display:inline-block;background:#edf1fb;color:#26385f;padding:11px 14px;border-radius:10px;font-weight:700}.filelabel input{display:none}.preview{max-height:300px;overflow:auto}
+.schedule-scroll{overflow:auto;max-width:100%;border:1px solid #cfd6df;margin-top:12px;background:#fff}
+.schedule-matrix{border-collapse:collapse;min-width:1100px;width:max-content;table-layout:fixed;font-family:Arial,sans-serif;font-size:12px}
+.schedule-matrix th,.schedule-matrix td{border:1px solid #222;padding:3px 2px;text-align:center;vertical-align:middle;height:23px;white-space:nowrap}
+.schedule-matrix .month-title{background:#4a86e8;color:#000;font-size:18px;font-weight:800;height:34px}
+.schedule-matrix .day-title{background:#ff9800;color:#000;font-size:16px;font-weight:800;height:30px}
+.schedule-matrix .name-head{background:#00e5e5;color:#000;width:165px;min-width:165px;font-weight:500}
+.schedule-matrix .person-name{text-align:left;padding-left:5px;width:165px;min-width:165px;background:#fff}
+.schedule-matrix .date-head{background:#fff;color:#000;font-weight:500}
+.schedule-matrix .weekday{font-weight:700;color:#000}
+.schedule-matrix .wk-0,.schedule-matrix .wk-6{background:#70bd76}
+.schedule-matrix .wk-1{background:#c5e1a5}
+.schedule-matrix .wk-2{background:#d4edb5}
+.schedule-matrix .wk-3{background:#b5dba0}
+.schedule-matrix .wk-4{background:#fff176}
+.schedule-matrix .wk-5{background:#a5d6a7}
+.schedule-matrix .shift-cell{width:31px;min-width:31px;padding:2px 0;font-weight:500;color:#000}
+.schedule-matrix .shift-M8{background:#a84b18}
+.schedule-matrix .shift-P8{background:#8bc34a}
+.schedule-matrix .shift-S8{background:#e91e9a}
+.schedule-matrix .shift-Off{background:#fff}
+.schedule-matrix .shift-P{background:#fff}
+.schedule-matrix .person-apri{background:#00f000!important;font-weight:700}
+@media(max-width:700px){.schedule-matrix{font-size:11px}.schedule-matrix .month-title{font-size:16px}}
 @media(max-width:700px){.wrap{padding:10px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{padding:12px}.row .field{flex-basis:100%}.brand{font-size:18px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -16,7 +39,7 @@
 <div class="grid stats"><div class="stat"><span>PERSONEL AKTIF</span><b id="npeople">0</b></div><div class="stat"><span>JADWAL BULAN DIPILIH</span><b id="nschedule">0</b></div><div class="stat"><span>PENDING</span><b id="npending">0</b></div><div class="stat"><span>SEMUA RIWAYAT COVER</span><b id="ncovers">0</b></div></div>
 <div class="row"><div class="field" style="max-width:220px"><label>BULAN JADWAL</label><input type="month" id="month"></div><button class="secondary" onclick="refresh()">Muat ulang</button></div>
 <nav class="tabs"><button class="active" data-tab="schedule" onclick="tab('schedule',this)">Jadwal</button><button data-tab="covers" onclick="tab('covers',this)">Riwayat Cover</button><button data-tab="request" onclick="tab('request',this)">Ajukan Cover</button><button id="admintab" class="hidden" data-tab="admin" onclick="tab('admin',this)">Admin & Impor</button></nav><div id="globalmsg"></div>
-<section id="pane-schedule" class="panel"><h3>Jadwal Personel</h3><div class="tablewrap"><table><thead><tr><th>TANGGAL</th><th>NAMA</th><th>SHIFT</th></tr></thead><tbody id="schedulebody"></tbody></table></div></section>
+<section id="pane-schedule" class="panel"><h3>Jadwal Personel</h3><div id="schedulematrix" class="schedule-scroll"></div></section>
 <section id="pane-covers" class="panel hidden"><h3>Semua Riwayat Cover</h3><p class="muted small">Menampilkan PENDING, APPROVED, dan REJECTED.</p><div class="row"><div class="field"><label>STATUS</label><select id="statusFilter"><option value="ALL">Semua status</option><option>PENDING</option><option>APPROVED</option><option>REJECTED</option></select></div><div class="field"><label>CARI</label><input id="coverSearch" placeholder="Nama, tanggal, shift, alasan"></div></div><div class="tablewrap"><table><thead><tr><th>TANGGAL</th><th>PEMILIK SHIFT</th><th>PENGGANTI</th><th>SHIFT</th><th>STATUS</th><th>ALASAN</th><th>CATATAN ADMIN</th><th>TINDAKAN</th></tr></thead><tbody id="coverbody"></tbody></table></div></section>
 <section id="pane-request" class="panel hidden"><h3>Ajukan Cover Shift</h3><p class="muted small">Pengajuan berulang diperbolehkan; riwayat sebelumnya tidak dihapus.</p><form id="coverform"><div class="row"><div class="field"><label>TANGGAL</label><input type="date" id="cdate" required></div><div class="field"><label>PEMILIK SHIFT</label><select id="owner" required></select></div></div><div class="row"><div class="field"><label>PENGGANTI</label><select id="coverer" required></select></div><div class="field"><label>SHIFT COVER</label><select id="cshift"><option>M8</option><option>P8</option><option>S8</option><option>P</option><option>Off</option></select></div></div><div class="field" style="margin:12px 0"><label>ALASAN</label><textarea id="reason" required></textarea></div><button type="submit">Kirim permintaan</button></form></section>
 <section id="pane-admin" class="panel hidden"><h3>Admin & Impor Jadwal</h3><div class="note">Impor mendukung format tabel (Nama, Tanggal, Shift) dan matriks (nama di kolom pertama, tanggal pada header). Sistem menampilkan pratinjau dan memvalidasi sebelum menyimpan. Riwayat cover tidak ditimpa.</div>
@@ -49,8 +72,29 @@ async function logout(){try{if(TOKEN)await api('apiLogout',TOKEN);}catch(e){}TOK
 async function refresh(){if(!TOKEN)return;try{DATA=await api('apiGetDashboard',TOKEN,$('month').value);render();msg('globalmsg','');}catch(e){msg('globalmsg',e.message);}}
 $('month').addEventListener('change',refresh);
 function tab(name,btn){document.querySelectorAll('[id^="pane-"]').forEach(p=>p.classList.add('hidden'));$('pane-'+name).classList.remove('hidden');document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');}
+function renderScheduleMatrix(){
+ const host=$('schedulematrix');if(!host||!DATA)return;
+ const month=$('month').value||new Date().toISOString().slice(0,7);
+ const parts=month.split('-').map(Number),year=parts[0],mo=parts[1],days=new Date(year,mo,0).getDate();
+ const weekdayNames=['Sn','Mn','Sl','Rb','Km','Jm','Sb'];
+ const shiftMap=new Map();
+ (DATA.schedule||[]).forEach(s=>{if(String(s.date||'').slice(0,7)===month)shiftMap.set(String(s.name||'').trim()+'|'+String(s.date||''),String(s.shift||'').trim());});
+ const names=[],seen=new Set();
+ (DATA.people||[]).forEach(p=>{const n=String(p.name||'').trim();if(n&&!seen.has(n)&&[...shiftMap.keys()].some(k=>k.startsWith(n+'|'))){names.push(n);seen.add(n);}});
+ (DATA.schedule||[]).filter(s=>String(s.date||'').slice(0,7)===month).forEach(s=>{const n=String(s.name||'').trim();if(n&&!seen.has(n)){names.push(n);seen.add(n);}});
+ if(!names.length){host.innerHTML='<p class="empty">Belum ada jadwal untuk bulan ini.</p>';return;}
+ let html='<table class="schedule-matrix"><thead><tr><th class="month-title" colspan="'+(days+1)+'">'+['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][mo]+' '+year+'</th></tr><tr><th class="name-head" rowspan="3">Nama personil</th><th class="day-title" colspan="'+days+'">Hari / Tanggal</th></tr><tr>';
+ for(let d=1;d<=days;d++){const wd=(new Date(year,mo-1,d).getDay()+6)%7;html+='<th class="weekday wk-'+wd+'">'+weekdayNames[wd]+'</th>';}
+ html+='</tr><tr>';
+ for(let d=1;d<=days;d++)html+='<th class="date-head">'+d+'</th>';
+ html+='</tr></thead><tbody>';
+ names.forEach(name=>{html+='<tr><td class="person-name '+(name.toUpperCase()==='APRI'?'person-apri':'')+'">'+esc(name)+'</td>';
+ for(let d=1;d<=days;d++){const date=year+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');const shift=shiftMap.get(name+'|'+date)||'';const cls=shift.toLowerCase()==='off'?'Off':shift.replace(/[^a-zA-Z0-9_-]/g,'');html+='<td class="shift-cell '+(cls?'shift-'+cls:'')+'">'+esc(shift)+'</td>';}
+ html+='</tr>';});
+ html+='</tbody></table>';host.innerHTML=html;
+}
 function render(){if(!DATA)return;$('npeople').textContent=DATA.people.length;$('nschedule').textContent=DATA.schedule.length;$('npending').textContent=DATA.pendingCount;$('ncovers').textContent=(DATA.allCovers||[]).length;
-$('schedulebody').innerHTML=DATA.schedule.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.name.localeCompare(b.name)).map(s=>'<tr><td>'+esc(s.date)+'</td><td>'+esc(s.name)+'</td><td><b>'+esc(s.shift)+'</b></td></tr>').join('')||'<tr><td colspan="3" class="empty">Belum ada jadwal bulan ini.</td></tr>';
+renderScheduleMatrix();
 const opts=DATA.people.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');['owner','coverer','uperson'].forEach(id=>$(id).innerHTML=opts);
 $('peoplebody').innerHTML=DATA.people.map(p=>'<tr><td>'+esc(p.name)+'</td><td>'+esc(p.role)+'</td><td>'+esc(p.status)+'</td><td>'+esc(p.id)+'</td></tr>').join('')||'<tr><td colspan="4" class="empty">Belum ada personel.</td></tr>';renderCovers();}
 function renderCovers(){if(!DATA)return;const status=$('statusFilter').value,search=$('coverSearch').value.trim().toLowerCase(),admin=USER&&USER.role==='ADMIN';const rows=(DATA.allCovers||[]).filter(c=>(status==='ALL'||c.status===status)&&(!search||[c.date,c.ownerName,c.covererName,c.shift,c.reason,c.status,c.adminNote].join(' ').toLowerCase().includes(search))).sort((a,b)=>b.date.localeCompare(a.date));$('coverbody').innerHTML=rows.map(c=>'<tr><td>'+esc(c.date)+'</td><td>'+esc(c.ownerName)+'</td><td>'+esc(c.covererName)+'</td><td>'+esc(c.shift)+'</td><td><span class="pill '+esc(c.status)+'">'+esc(c.status)+'</span></td><td>'+esc(c.reason)+'</td><td>'+esc(c.adminNote||'—')+'</td><td>'+(admin&&c.status==='PENDING'?'<div class="actions"><button onclick="review(\''+esc(c.id)+'\',\'APPROVED\')">Setujui</button><button class="danger" onclick="review(\''+esc(c.id)+'\',\'REJECTED\')">Tolak</button></div>':'—')+'</td></tr>').join('')||'<tr><td colspan="8" class="empty">Belum ada riwayat sesuai filter.</td></tr>';}
