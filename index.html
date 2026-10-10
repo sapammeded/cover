@@ -86,7 +86,7 @@ function renderScheduleMatrix(){
  const host=$('schedulematrix');if(!host||!DATA)return;
  const month=$('month').value||new Date().toISOString().slice(0,7);
  const parts=month.split('-').map(Number),year=parts[0],mo=parts[1],days=new Date(year,mo,0).getDate();
- const weekdayNames=['Sn','Mn','Sl','Rb','Km','Jm','Sb'];
+ const weekdayNames=['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
  const shiftMap=new Map();
  (DATA.schedule||[]).forEach(s=>{if(String(s.date||'').slice(0,7)===month)shiftMap.set(String(s.name||'').trim()+'|'+String(s.date||''),String(s.shift||'').trim());});
  const names=[],seen=new Set();
